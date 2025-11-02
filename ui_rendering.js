@@ -1,7 +1,7 @@
 // Project: Nano Empire UI Rendering Functions
 // Contains all logic to update the DOM based on the current gameState, including timers.
 
-let activeTimers = [];
+var activeTimers = []; // Changed from 'let' to 'var' and initialized at the file scope.
 
 /**
  * Clears all active countdown timers (tasks/protection).
