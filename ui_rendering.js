@@ -1,14 +1,17 @@
 // Project: Nano Empire UI Rendering Functions
 // Contains all logic to update the DOM based on the current gameState, including timers.
 
-var activeTimers = []; // Changed from 'let' to 'var' and initialized at the file scope.
+// NOTE: activeTimers is now declared as a global variable in main_logic.js
 
 /**
  * Clears all active countdown timers (tasks/protection).
  */
 function clearAllTimers() {
-    activeTimers.forEach(timerId => clearInterval(timerId));
-    activeTimers = [];
+    // Rely on global variable defined in main_logic.js
+    if (typeof activeTimers !== 'undefined') {
+        activeTimers.forEach(timerId => clearInterval(timerId));
+        activeTimers.length = 0; // Clear the array safely
+    }
 }
 
 /**
@@ -64,7 +67,10 @@ function startAllCountdownTimers() {
                 element.text(timeString);
             }
         }, 1000);
-        activeTimers.push(timerId);
+        // Ensure activeTimers is globally defined before pushing
+        if (typeof activeTimers !== 'undefined') {
+            activeTimers.push(timerId);
+        }
     });
 }
 
