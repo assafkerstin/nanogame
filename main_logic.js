@@ -3,7 +3,6 @@
 
 const API_URL = 'api.php';
 let gameState = {};
-let activeTimers = [];
 
 /**
  * Executes an asynchronous API POST call.
@@ -29,27 +28,6 @@ function apiCall(data, callback) {
  */
 function showError(message) {
     $('#error-message').text(message).show();
-}
-
-/**
- * Clears all active countdown timers (tasks/protection).
- */
-function clearAllTimers() {
-    activeTimers.forEach(timerId => clearInterval(timerId));
-    activeTimers = [];
-}
-
-/**
- * Formats seconds into HH:MM:SS duration string.
- * @param {number} totalSeconds 
- * @returns {string}
- */
-function formatDuration(totalSeconds) {
-    if (isNaN(totalSeconds) || totalSeconds < 0) return "00:00:00";
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
 }
 
 // --- Custom Modal Implementation (Replaces alert/confirm) ---
