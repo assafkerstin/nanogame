@@ -1,1235 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Nano - Resource Management Game</title>
-   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-   <style>
-       body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-       .view { display: none; }
-       .active-view { display: block; }
-       .navbar { background-color: #343a40; }
-       .navbar-brand, .nav-link { color: #fff !important; }
-       .card { margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,.1); }
-       .card-header { background-color: #6c757d; color: white; font-weight: bold; }
-       .btn-primary { background-color: #007bff; border-color: #007bff; }
-       .resource-icon { width: 24px; height: 24px; margin-right: 8px; vertical-align: middle; }
-       .stat-card { text-align: center; }
-       .stat-card .value { font-size: 1.5rem; font-weight: bold; }
-       .stat-card .label { font-size: 0.9rem; color: #6c757d; }
-       .countdown-timer, .protection-timer { font-weight: bold; color: #dc3545; }
-       #auth-container, #game-container { max-width: 960px; margin: auto; padding: 20px; }
-       .order-book-table { font-size: 0.9em; }
-       .order-book-table td, .order-book-table th { padding: 0.4rem; }
-   </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano - Resource Management Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .view { display: none; }
+        .active-view { display: block; }
+        .navbar { background-color: #343a40; }
+        .navbar-brand, .nav-link { color: #fff !important; }
+        .card { margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,.1); }
+        .card-header { background-color: #6c757d; color: white; font-weight: bold; }
+        .btn-primary { background-color: #007bff; border-color: #007bff; }
+        .resource-icon { width: 24px; height: 24px; margin-right: 8px; vertical-align: middle; }
+        .stat-card { text-align: center; }
+        .stat-card .value { font-size: 1.5rem; font-weight: bold; }
+        .stat-card .label { font-size: 0.9rem; color: #6c757d; }
+        .countdown-timer, .protection-timer { font-weight: bold; color: #dc3545; }
+        #auth-container, #game-container { max-width: 960px; margin: auto; padding: 20px; }
+        .order-book-table { font-size: 0.9em; }
+        .order-book-table td, .order-book-table th { padding: 0.4rem; }
+    </style>
 </head>
 <body>
 
-   <div id="auth-container">
-       <div id="login-form">
-           <div class="card">
-               <div class="card-header">Login</div>
-               <div class="card-body">
-                   <input type="text" id="login-username" class="form-control mb-2" placeholder="Username">
-                   <input type="password" id="login-password" class="form-control mb-2" placeholder="Password">
-                   <button id="login-btn" class="btn btn-primary w-100">Login</button>
-                   <p class="text-center mt-3">No account? <a href="#" id="show-register-link">Register here</a></p>
-               </div>
-           </div>
-       </div>
-
-       <div id="register-form" style="display: none;">
+    <div id="auth-container">
+        <div id="login-form">
             <div class="card">
-               <div class="card-header">Register</div>
-               <div class="card-body">
-                   <input type="text" id="register-username" class="form-control mb-2" placeholder="Username">
-                   <input type="email" id="register-email" class="form-control mb-2" placeholder="Email">
-                   <input type="password" id="register-password" class="form-control mb-2" placeholder="Password">
-                   <button id="register-btn" class="btn btn-success w-100">Register</button>
-                   <p class="text-center mt-3">Already have an account? <a href="#" id="show-login-link">Login here</a></p>
-               </div>
-           </div>
-       </div>
-       <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
-   </div>
+                <div class="card-header">Login</div>
+                <div class="card-body">
+                    <input type="text" id="login-username" class="form-control mb-2" placeholder="Username">
+                    <input type="password" id="login-password" class="form-control mb-2" placeholder="Password">
+                    <button id="login-btn" class="btn btn-primary w-100">Login</button>
+                    <p class="text-center mt-3">No account? <a href="#" id="show-register-link">Register here</a></p>
+                </div>
+            </div>
+        </div>
 
-   <div id="game-container" style="display: none;">
-       <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-           <div class="container-fluid">
-               <a class="navbar-brand" href="#">Nano Game</a>
-               <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                   <span class="navbar-toggler-icon"></span>
-               </button>
-               <div class="collapse navbar-collapse" id="navbarNav">
-                   <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="home-view"><i class="bi bi-house-door"></i> Home</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="workers-view"><i class="bi bi-person-walking"></i> Workers</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="buildings-view"><i class="bi bi-building"></i> Buildings</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="army-view"><i class="bi bi-shield-shaded"></i> Army</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="conquer-view"><i class="bi bi-flag-fill"></i> Conquer</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="jobs-view"><i class="bi bi-briefcase"></i> Jobs</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="market-view"><i class="bi bi-graph-up"></i> Market</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="history-view"><i class="bi bi-clock-history"></i> History</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="tax-collection-view"><i class="bi bi-bank"></i> Tax Collection</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="distribution-view"><i class="bi bi-pie-chart"></i> Distribution</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="distribution-history-view"><i class="bi bi-card-list"></i> Dist. History</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="leaderboard-view"><i class="bi bi-trophy"></i> Leaderboard</a></li>
-                       <li class="nav-item"><a class="nav-link" href="#" data-view="harvesting-activity-view"><i class="bi bi-graph-down"></i> Harvesting</a></li>
-                   </ul>
-                   <span class="navbar-text me-3" id="username-display"></span>
-                   <button class="btn btn-outline-light" id="logout-btn">Logout</button>
-               </div>
-           </div>
-       </nav>
+        <div id="register-form" style="display: none;">
+             <div class="card">
+                <div class="card-header">Register</div>
+                <div class="card-body">
+                    <input type="text" id="register-username" class="form-control mb-2" placeholder="Username">
+                    <input type="email" id="register-email" class="form-control mb-2" placeholder="Email">
+                    <input type="password" id="register-password" class="form-control mb-2" placeholder="Password">
+                    <button id="register-btn" class="btn btn-success w-100">Register</button>
+                    <p class="text-center mt-3">Already have an account? <a href="#" id="show-login-link">Login here</a></p>
+                </div>
+            </div>
+        </div>
+        <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
+    </div>
 
-       <div style="height: 70px;"></div> <div id="home-view" class="view">
-           <h3>Dashboard</h3>
-           <div class="row">
-               <div class="col-md-6">
-                   <div class="card">
-                       <div class="card-header d-flex justify-content-between align-items-center">
-                           Resources & Balances
-                           <i class="bi bi-question-circle-fill"
-                              data-bs-toggle="popover"
-                              data-bs-trigger="hover"
-                              data-bs-title="Balance Descriptions"
-                              data-bs-content="Nano Coin: In-game currency earned from jobs and sales. Game Credits: Premium currency. Resources: Used for building and recruiting. Employees: Your workforce for tasks."></i>
-                       </div>
-                       <div class="card-body">
-                           <ul class="list-group list-group-flush">
-                               <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-cash-coin text-success"></i> Nano Coin</span> <strong id="earned-nano-balance">0.00000000</strong></li>
-                               <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-gem text-primary"></i> Game Credits</span> <strong id="unearned-nano-balance">0.00000000</strong></li>
-                               <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-tree text-success"></i> Wood</span> <strong id="wood-balance">0.00000000</strong></li>
-                               <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-minecart-loaded text-secondary"></i> Iron</span> <strong id="iron-balance">0.00000000</strong></li>
-                               <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-bricks text-muted"></i> Stone</span> <strong id="stone-balance">0.00000000</strong></li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-people-fill"></i> Employees</span> <strong id="employees-count">0</strong></li>
-                           </ul>
-                           <p id="next-worker-message" class="text-center small text-muted mt-2"></p>
-                       </div>
-                   </div>
-                    <div class="card">
-                       <div class="card-header">Last 24H Harvest Activity</div>
-                       <div class="card-body">
-                           <ul class="list-group list-group-flush" id="last-24h-activity-summary">
-                           </ul>
-                       </div>
-                   </div>
-               </div>
+    <div id="game-container" style="display: none;">
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Nano Game</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="home-view"><i class="bi bi-house-door"></i> Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="workers-view"><i class="bi bi-person-walking"></i> Workers</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="buildings-view"><i class="bi bi-building"></i> Buildings</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="army-view"><i class="bi bi-shield-shaded"></i> Army</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="conquer-view"><i class="bi bi-flag-fill"></i> Conquer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="jobs-view"><i class="bi bi-briefcase"></i> Jobs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="market-view"><i class="bi bi-graph-up"></i> Market</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="history-view"><i class="bi bi-clock-history"></i> History</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="tax-collection-view"><i class="bi bi-bank"></i> Tax Collection</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="distribution-view"><i class="bi bi-pie-chart"></i> Distribution</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="distribution-history-view"><i class="bi bi-card-list"></i> Dist. History</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="leaderboard-view"><i class="bi bi-trophy"></i> Leaderboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-view="harvesting-activity-view"><i class="bi bi-graph-down"></i> Harvesting</a></li>
+                    </ul>
+                    <span class="navbar-text me-3" id="username-display"></span>
+                    <button class="btn btn-outline-light" id="logout-btn">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div style="height: 70px;"></div> <div id="home-view" class="view">
+            <h3>Dashboard</h3>
+            <div class="row">
                 <div class="col-md-6">
-                   <div class="card">
-                       <div class="card-header">Military Status</div>
-                        <div class="card-body">
-                           <div class="row">
-                               <div class="col-4 stat-card">
-                                   <div class="value" id="soldiers-count">0</div>
-                                   <div class="label">Soldiers</div>
-                               </div>
-                               <div class="col-4 stat-card">
-                                   <div class="value" id="military-swords">0</div>
-                                   <div class="label">Swords</div>
-                               </div>
-                               <div class="col-4 stat-card">
-                                   <div class="value" id="military-power">0.00000000</div>
-                                   <div class="label">Military Power</div>
-                               </div>
-                           </div>
-                           <hr>
-                           <div id="military-power-breakdown" class="text-center small text-muted"></div>
-                       </div>
-                   </div>
                     <div class="card">
-                       <div class="card-header">Building Levels</div>
-                       <div class="card-body" id="dashboard-buildings-summary">
-                       </div>
-                   </div>
-               </div>
-           </div>
-            <div class="row">
-               <div class="col-md-12">
-                   <div class="card">
-                       <div class="card-header">Productivity</div>
-                       <div class="card-body" id="dashboard-productivity-stats">
-                       </div>
-                   </div>
-               </div>
-           </div>
-            <div class="row">
-               <div class="col-md-12">
-                   <div class="card">
-                       <div class="card-header">Worker Status</div>
-                       <div class="card-body row" id="dashboard-worker-status">
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <div id="workers-view" class="view">
-           <h3>Workers</h3>
-           <div id="worker-list" class="row"></div>
-       </div>
-
-       <div id="buildings-view" class="view">
-           <h3>Buildings</h3>
-           <div id="building-list" class="row"></div>
-       </div>
-
-       <div id="army-view" class="view">
-           <h3>Army</h3>
-           <div class="row">
-               <div class="col-md-7">
-                   <div class="card">
-                       <div class="card-header">Army Overview</div>
-                       <div class="card-body">
-                           <div class="row">
-                               <div class="col-4 stat-card">
-                                   <div class="value" id="army-soldiers">0</div>
-                                   <div class="label">Soldiers</div>
-                               </div>
-                               <div class="col-4 stat-card">
-                                   <div class="value" id="army-swords">0</div>
-                                   <div class="label">Swords</div>
-                               </div>
-                               <div class="col-4 stat-card">
-                                   <div class="value" id="army-power">0.00000000</div>
-                                   <div class="label">Military Power</div>
-                               </div>
-                           </div>
-                           <hr>
-                           <div id="army-power-breakdown" class="text-center small text-muted"></div>
-                       </div>
-                   </div>
-               </div>
-               <div class="col-md-5">
-                   <div class="card">
-                       <div class="card-header">Recruit Soldier</div>
-                       <div class="card-body">
-                            <p id="recruit-cost-text">Cost: ...</p>
-                            <div id="recruit-cost-summary" class="mb-3">
-                               <strong id="recruit-cost-status" class="text-danger"></strong>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            Resources & Balances
+                            <i class="bi bi-question-circle-fill"
+                               data-bs-toggle="popover"
+                               data-bs-trigger="hover"
+                               data-bs-title="Balance Descriptions"
+                               data-bs-content="Nano Coin: In-game currency earned from jobs and sales. Game Credits: Premium currency. Resources: Used for building and recruiting. Employees: Your workforce for tasks."></i>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-cash-coin text-success"></i> Nano Coin</span> <strong id="earned-nano-balance">0.00000000</strong></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-gem text-primary"></i> Game Credits</span> <strong id="unearned-nano-balance">0.00000000</strong></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-tree text-success"></i> Wood</span> <strong id="wood-balance">0.00000000</strong></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-minecart-loaded text-secondary"></i> Iron</span> <strong id="iron-balance">0.00000000</strong></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-bricks text-muted"></i> Stone</span> <strong id="stone-balance">0.00000000</strong></li>
+                                 <li class="list-group-item d-flex justify-content-between align-items-center"><span><i class="bi bi-people-fill"></i> Employees</span> <strong id="employees-count">0</strong></li>
+                            </ul>
+                            <p id="next-worker-message" class="text-center small text-muted mt-2"></p>
+                        </div>
+                    </div>
+                     <div class="card">
+                        <div class="card-header">Last 24H Harvest Activity</div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="last-24h-activity-summary">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Military Status</div>
+                         <div class="card-body">
+                            <div class="row">
+                                <div class="col-4 stat-card">
+                                    <div class="value" id="soldiers-count">0</div>
+                                    <div class="label">Soldiers</div>
+                                </div>
+                                <div class="col-4 stat-card">
+                                    <div class="value" id="military-swords">0</div>
+                                    <div class="label">Swords</div>
+                                </div>
+                                <div class="col-4 stat-card">
+                                    <div class="value" id="military-power">0.00000000</div>
+                                    <div class="label">Military Power</div>
+                                </div>
                             </div>
-                            <button id="recruit-btn" class="btn btn-primary w-100">Recruit 1 Soldier</button>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
+                            <hr>
+                            <div id="military-power-breakdown" class="text-center small text-muted"></div>
+                        </div>
+                    </div>
+                     <div class="card">
+                        <div class="card-header">Building Levels</div>
+                        <div class="card-body" id="dashboard-buildings-summary">
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">Productivity</div>
+                        <div class="card-body" id="dashboard-productivity-stats">
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">Worker Status</div>
+                        <div class="card-body row" id="dashboard-worker-status">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-       <div id="conquer-view" class="view">
-           <h3>Conquest</h3>
-           <div class="card">
-               <div class="card-header">Conquest Power</div>
-               <div class="card-body">
-                   <div class="row">
-                       <div class="col-4 stat-card">
-                           <div class="value" id="conquer-total-power">0.00000000</div>
-                           <div class="label">Total Power</div>
-                       </div>
-                       <div class="col-4 stat-card">
-                           <div class="value text-danger" id="conquer-used-power">0.00000000</div>
-                           <div class="label">Used Power</div>
-                       </div>
-                       <div class="col-4 stat-card">
-                           <div class="value text-success" id="conquer-unused-power">0.00000000</div>
-                           <div class="label">Unused Power</div>
-                       </div>
-                   </div>
-               </div>
-           </div>
+        <div id="workers-view" class="view">
+            <h3>Workers</h3>
+            <div id="worker-list" class="row"></div>
+        </div>
 
-           <div class="card">
-               <div class="card-header">Currently Occupied</div>
-               <div class="card-body">
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Player</th>
-                               <th>Army Power</th>
-                               <th>Action</th>
-                           </tr>
-                       </thead>
-                       <tbody id="occupied-list"></tbody>
-                   </table>
-               </div>
-           </div>
+        <div id="buildings-view" class="view">
+            <h3>Buildings</h3>
+            <div id="building-list" class="row"></div>
+        </div>
 
-           <div class="card">
-               <div class="card-header">Potential Targets</div>
-               <div class="card-body">
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Player</th>
-                               <th>Army Power</th>
-                               <th>Status / Action</th>
-                           </tr>
-                       </thead>
-                       <tbody id="targets-list"></tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
+        <div id="army-view" class="view">
+            <h3>Army</h3>
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="card">
+                        <div class="card-header">Army Overview</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-4 stat-card">
+                                    <div class="value" id="army-soldiers">0</div>
+                                    <div class="label">Soldiers</div>
+                                </div>
+                                <div class="col-4 stat-card">
+                                    <div class="value" id="army-swords">0</div>
+                                    <div class="label">Swords</div>
+                                </div>
+                                <div class="col-4 stat-card">
+                                    <div class="value" id="army-power">0.00000000</div>
+                                    <div class="label">Military Power</div>
+                                </div>
+                            </div>
+                            <hr>
+                            <div id="army-power-breakdown" class="text-center small text-muted"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-header">Recruit Soldier</div>
+                        <div class="card-body">
+                             <p id="recruit-cost-text">Cost: ...</p>
+                             <div id="recruit-cost-summary" class="mb-3">
+                                <strong id="recruit-cost-status" class="text-danger"></strong>
+                             </div>
+                             <button id="recruit-btn" class="btn btn-primary w-100">Recruit 1 Soldier</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-       <div id="jobs-view" class="view">
-           <h3>Job Market</h3>
-           <div class="card">
-               <div class="card-header">Post a New Job</div>
-               <div class="card-body">
-                   <div class="row g-3 align-items-end">
-                       <div class="col-md-3">
-                           <label for="job-item" class="form-label">Item to Produce</label>
-                           <input type="text" id="job-item" class="form-control" value="Sword" disabled>
-                       </div>
-                       <div class="col-md-3">
-                           <label for="job-quantity" class="form-label">Quantity</label>
-                           <input type="number" id="job-quantity" class="form-control" min="1" placeholder="e.g., 100">
-                       </div>
-                       <div class="col-md-3">
-                           <label for="job-salary" class="form-label">Salary per Sword</label>
-                           <input type="number" id="job-salary" class="form-control" min="0.00000001" step="0.00000001" placeholder="e.g., 0.1">
-                       </div>
-                       <div class="col-md-3">
-                           <button class="btn btn-primary w-100" id="post-job-btn" disabled>Post Job Offer</button>
-                       </div>
-                   </div>
-                   <div id="job-cost-summary" class="mt-3" style="display: none;">
-                       <small><strong>Total Cost:</strong> <span id="job-resource-cost">0</span> Iron & <span id="job-salary-cost">0</span> Currency. <strong id="job-cost-status" class="text-danger"></strong></small>
-                   </div>
-               </div>
-           </div>
-           <div class="card">
-               <div class="card-header">Open Job Offers</div>
-               <div class="card-body">
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Employer</th>
-                               <th>Item</th>
-                               <th>Quantity</th>
-                               <th>Total Salary</th>
-                               <th>Est. Time</th>
-                               <th>Action</th>
-                           </tr>
-                       </thead>
-                       <tbody id="job-offers-list">
-                       </tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
-       
-       <div id="market-view" class="view">
-           <h3>Market</h3>
+        <div id="conquer-view" class="view">
+            <h3>Conquest</h3>
             <div class="card">
-               <div class="card-body">
-                   <div class="mb-3">
-                       <label for="market-item-select" class="form-label">Select Item</label>
-                       <select class="form-select" id="market-item-select">
-                           <option value="wood">Wood</option>
-                           <option value="iron">Iron</option>
-                           <option value="stone">Stone</option>
-                           <option value="sword">Sword</option>
-                       </select>
-                   </div>
-               </div>
-           </div>
+                <div class="card-header">Conquest Power</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-4 stat-card">
+                            <div class="value" id="conquer-total-power">0.00000000</div>
+                            <div class="label">Total Power</div>
+                        </div>
+                        <div class="col-4 stat-card">
+                            <div class="value text-danger" id="conquer-used-power">0.00000000</div>
+                            <div class="label">Used Power</div>
+                        </div>
+                        <div class="col-4 stat-card">
+                            <div class="value text-success" id="conquer-unused-power">0.00000000</div>
+                            <div class="label">Unused Power</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-           <div class="row">
-               <div class="col-md-6">
-                   <div class="card">
-                       <div class="card-header bg-success text-white">Buy Orders (Bids)</div>
-                       <div class="card-body p-0">
-                           <table class="table table-striped order-book-table mb-0">
-                               <thead><tr><th>Price</th><th>Quantity</th></tr></thead>
-                               <tbody id="buy-orders"></tbody>
-                           </table>
-                       </div>
-                   </div>
-               </div>
-               <div class="col-md-6">
-                   <div class="card">
-                       <div class="card-header bg-danger text-white">Sell Orders (Asks)</div>
-                       <div class="card-body p-0">
-                           <table class="table table-striped order-book-table mb-0">
-                               <thead><tr><th>Price</th><th>Quantity</th></tr></thead>
-                               <tbody id="sell-orders"></tbody>
-                           </table>
-                       </div>
-                   </div>
-               </div>
-           </div>
-
-            <div class="card mt-4">
-               <div class="card-header">Place a New Order</div>
-               <div class="card-body">
-                   <div class="row g-3">
-                       <div class="col-md-3">
-                            <select id="order-type" class="form-select">
-                               <option value="buy">Buy</option>
-                               <option value="sell">Sell</option>
-                           </select>
-                       </div>
-                       <div class="col-md-3">
-                           <input type="number" id="order-quantity" class="form-control" placeholder="Quantity" min="1">
-                       </div>
-                       <div class="col-md-3">
-                            <input type="number" id="order-price" class="form-control" placeholder="Price per unit" step="0.00000001">
-                       </div>
-                       <div class="col-md-3">
-                           <button id="place-order-btn" class="btn btn-primary w-100">Place Order</button>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-
-       <div id="history-view" class="view">
-           <h3>Action History</h3>
-           <div class="card">
-               <ul class="list-group list-group-flush" id="history-log">
-               </ul>
-           </div>
-       </div>
-
-       <div id="tax-collection-view" class="view">
-           <h3>Government Treasury</h3>
             <div class="card">
-               <div class="card-header">Government Balances</div>
-               <div class="card-body">
-                   <div id="gov-balances-display" class="row"></div>
-               </div>
-           </div>
-           <h3>Government Tax Collection History</h3>
-           <div class="card">
-               <div class="card-body">
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Player</th>
-                               <th>Tax Details</th>
-                               <th>Date</th>
-                           </tr>
-                       </thead>
-                       <tbody id="tax-history-log">
-                       </tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
-       
-       <div id="distribution-view" class="view">
-           <h3>Distribution Pool</h3>
-           <div class="card">
-               <div class="card-header">24-Hour Tax Revenue</div>
-               <div class="card-body text-center">
-                   <h4>Total Tax Collected (Last 24h)</h4>
-                   <p class="display-4" id="distribution-total">0.00000000</p>
-                   <p class="text-muted">This is the total currency collected by the government which is used for referral payouts and other distributions.</p>
-               </div>
-           </div>
-       </div>
+                <div class="card-header">Currently Occupied</div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Army Power</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="occupied-list"></tbody>
+                    </table>
+                </div>
+            </div>
 
-       <div id="distribution-history-view" class="view">
-           <h3>Distribution History</h3>
-           <div class="card">
-               <div class="card-header">Recent Distributions</div>
-               <div class="card-body">
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Recipient</th>
-                               <th>Distribution</th>
-                               <th>Reason</th>
-                               <th>Date</th>
-                           </tr>
-                       </thead>
-                       <tbody id="distribution-history-log"></tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
-       
-       <div id="harvesting-activity-view" class="view">
-            <h3>Harvesting Activity</h3>
-           <div class="card">
-               <div class="card-body">
-                   <div class="mb-3">
-                       <label for="harvesting-timeframe-select" class="form-label">Select Timeframe</label>
-                       <select id="harvesting-timeframe-select" class="form-select">
-                           <option value="24_hours">Last 24 Hours</option>
-                           <option value="all_time">All Time</option>
-                       </select>
-                   </div>
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Rank</th>
-                               <th>Player</th>
-                               <th>Total Harvest Actions</th>
-                           </tr>
-                       </thead>
-                       <tbody id="harvesting-activity-content">
-                       </tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
-       
-       <div id="leaderboard-view" class="view">
-           <h3>Leaderboard</h3>
-           <div class="card">
-               <div class="card-body">
-                   <div class="mb-3">
-                       <label for="leaderboard-sort-select" class="form-label">Sort By</label>
-                       <select id="leaderboard-sort-select" class="form-select">
-                           <option value="net_worth">Net Worth</option>
-                           <option value="military_power">Military Power</option>
-                           <option value="sword">Swords</option>
-                           <option value="workers">Workers</option>
-                           <optgroup label="Productivity Actions">
-                               <option value="prod_today">Today</option>
-                               <option value="prod_7_days">Last 7 Days</option>
-                               <option value="prod_30_days">Last 30 Days</option>
-                               <option value="prod_all_time">All Time</option>
-                           </optgroup>
-                           <optgroup label="Total Harvested (All Time)">
-                               <option value="harvest_total">All Resources</option>
-                               <option value="harvest_wood_total">Wood</option>
-                               <option value="harvest_iron_total">Iron</option>
-                               <option value="harvest_stone_total">Stone</option>
-                           </optgroup>
-                            <optgroup label="Total Produced (All Time)">
-                               <option value="swords_produced_total">Swords</option>
-                           </optgroup>
-                       </select>
-                   </div>
-                   <table class="table table-striped">
-                       <thead>
-                           <tr>
-                               <th>Rank</th>
-                               <th>Player</th>
-                               <th id="leaderboard-score-header">Net Worth</th>
-                           </tr>
-                       </thead>
-                       <tbody id="leaderboard-content">
-                       </tbody>
-                   </table>
-               </div>
-           </div>
-       </div>
+            <div class="card">
+                <div class="card-header">Potential Targets</div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Army Power</th>
+                                <th>Status / Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="targets-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-   </div>
+        <div id="jobs-view" class="view">
+            <h3>Job Market</h3>
+            <div class="card">
+                <div class="card-header">Post a New Job</div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="job-item" class="form-label">Item to Produce</label>
+                            <input type="text" id="job-item" class="form-control" value="Sword" disabled>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="job-quantity" class="form-label">Quantity</label>
+                            <input type="number" id="job-quantity" class="form-control" min="1" placeholder="e.g., 100">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="job-salary" class="form-label">Salary per Sword</label>
+                            <input type="number" id="job-salary" class="form-control" min="0.00000001" step="0.00000001" placeholder="e.g., 0.1">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" id="post-job-btn" disabled>Post Job Offer</button>
+                        </div>
+                    </div>
+                    <div id="job-cost-summary" class="mt-3" style="display: none;">
+                        <small><strong>Total Cost:</strong> <span id="job-resource-cost">0</span> Iron & <span id="job-salary-cost">0</span> Currency. <strong id="job-cost-status" class="text-danger"></strong></small>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Open Job Offers</div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employer</th>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Total Salary</th>
+                                <th>Est. Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="job-offers-list">
+                        </tobody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="market-view" class="view">
+            <h3>Market</h3>
+             <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="market-item-select" class="form-label">Select Item</label>
+                        <select class="form-select" id="market-item-select">
+                            <option value="wood">Wood</option>
+                            <option value="iron">Iron</option>
+                            <option value="stone">Stone</option>
+                            <option value="sword">Sword</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-   <script>
-   $(document).ready(function() {
-       const API_URL = 'api.php';
-       let gameState = {};
-       let activeTimers = [];
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">Buy Orders (Bids)</div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped order-book-table mb-0">
+                                <thead><tr><th>Price</th><th>Quantity</th></tr></thead>
+                                <tbody id="buy-orders"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">Sell Orders (Asks)</div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped order-book-table mb-0">
+                                <thead><tr><th>Price</th><th>Quantity</th></tr></thead>
+                                <tbody id="sell-orders"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-       function apiCall(data, callback) {
-           $.post(API_URL, data, function(response) {
-               if (response.auth_error) {
-                   showLoginScreen();
-               } else {
-                   callback(response);
-               }
-           }, 'json').fail(function(jqXHR) {
-               console.error("API Call Failed:", jqXHR.responseText);
-               showError("Error communicating with the server. Check console for details.");
-           });
-       }
+             <div class="card mt-4">
+                <div class="card-header">Place a New Order</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                             <select id="order-type" class="form-select">
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" id="order-quantity" class="form-control" placeholder="Quantity" min="1">
+                        </div>
+                        <div class="col-md-3">
+                             <input type="number" id="order-price" class="form-control" placeholder="Price per unit" step="0.00000001">
+                        </div>
+                        <div class="col-md-3">
+                            <button id="place-order-btn" class="btn btn-primary w-100">Place Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-       function showError(message) {
-           $('#error-message').text(message).show();
-       }
+        <div id="history-view" class="view">
+            <h3>Action History</h3>
+            <div class="card">
+                <ul class="list-group list-group-flush" id="history-log">
+                </ul>
+            </div>
+        </div>
 
-       function clearAllTimers() {
-           activeTimers.forEach(timerId => clearInterval(timerId));
-           activeTimers = [];
-       }
+        <div id="tax-collection-view" class="view">
+            <h3>Government Treasury</h3>
+             <div class="card">
+                <div class="card-header">Government Balances</div>
+                <div class="card-body">
+                    <div id="gov-balances-display" class="row"></div>
+                </div>
+            </div>
+            <h3>Government Tax Collection History</h3>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Tax Details</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tax-history-log">
+                        </tobody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="distribution-view" class="view">
+            <h3>Distribution Pool</h3>
+            <div class="card">
+                <div class="card-header">24-Hour Tax Revenue</div>
+                <div class="card-body text-center">
+                    <h4>Total Tax Collected (Last 24h)</h4>
+                    <p class="display-4" id="distribution-total">0.00000000</p>
+                    <p class="text-muted">This is the total currency collected by the government which is used for referral payouts and other distributions.</p>
+                </div>
+            </div>
+        </div>
 
-       function formatDuration(totalSeconds) {
-           if (isNaN(totalSeconds) || totalSeconds < 0) return "00:00:00";
-           const hours = Math.floor(totalSeconds / 3600);
-           const minutes = Math.floor((totalSeconds % 3600) / 60);
-           const seconds = totalSeconds % 60;
-           return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
-       }
+        <div id="distribution-history-view" class="view">
+            <h3>Distribution History</h3>
+            <div class="card">
+                <div class="card-header">Recent Distributions</div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Distribution</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="distribution-history-log"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="harvesting-activity-view" class="view">
+             <h3>Harvesting Activity</h3>
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="harvesting-timeframe-select" class="form-label">Select Timeframe</label>
+                        <select id="harvesting-timeframe-select" class="form-select">
+                            <option value="24_hours">Last 24 Hours</option>
+                            <option value="all_time">All Time</option>
+                        </select>
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Total Harvest Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="harvesting-activity-content">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="leaderboard-view" class="view">
+            <h3>Leaderboard</h3>
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="leaderboard-sort-select" class="form-label">Sort By</label>
+                        <select id="leaderboard-sort-select" class="form-select">
+                            <option value="net_worth">Net Worth</option>
+                            <option value="military_power">Military Power</option>
+                            <option value="sword">Swords</option>
+                            <option value="workers">Workers</option>
+                            <optgroup label="Productivity Actions">
+                                <option value="prod_today">Today</option>
+                                <option value="prod_7_days">Last 7 Days</option>
+                                <option value="prod_30_days">Last 30 Days</option>
+                                <option value="prod_all_time">All Time</option>
+                            </optgroup>
+                            <optgroup label="Total Harvested (All Time)">
+                                <option value="harvest_total">All Resources</option>
+                                <option value="harvest_wood_total">Wood</option>
+                                <option value="harvest_iron_total">Iron</option>
+                                <option value="harvest_stone_total">Stone</option>
+                            </optgroup>
+                             <optgroup label="Total Produced (All Time)">
+                                <option value="swords_produced_total">Swords</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th id="leaderboard-score-header">Net Worth</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-content">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-       function showView(viewId) {
-           clearAllTimers();
-           $('.view').removeClass('active-view');
-           $('#' + viewId).addClass('active-view');
+    </div>
 
-           switch (viewId) {
-               case 'home-view':
-               case 'workers-view':
-               case 'buildings-view':
-               case 'army-view':
-                   fetchAndUpdateGameState();
-                   break;
-               case 'market-view':
-                   updateMarketView();
-                   break;
-               case 'history-view':
-                   updateHistoryView();
-                   break;
-               case 'jobs-view':
-                   updateJobsView();
-                   break;
-               case 'tax-collection-view':
-                   updateTaxCollectionView();
-                   break;
-               case 'distribution-view':
-                   updateDistributionView();
-                   break;
-               case 'distribution-history-view':
-                   updateDistributionHistoryView();
-                   break;
-               case 'leaderboard-view':
-                   updateLeaderboardView();
-                   break;
-               case 'harvesting-activity-view':
-                   updateHarvestingActivityView();
-                   break;
-               case 'conquer-view':
-                   updateConquerView();
-                   break;
-           }
-       }
-       
-       function showLoginScreen() {
-           $('#auth-container').show();
-           $('#game-container').hide();
-           $('#error-message').hide();
-       }
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        const API_URL = 'api.php';
+        let gameState = {};
+        let activeTimers = [];
 
-       function fetchAndUpdateGameState() {
-           apiCall({ action: 'get_user_data' }, function(response) {
-               if (response.success) {
-                   gameState = response.data;
-                   updateUI();
-               }
-           });
-       }
-       
-       function updateUI() {
-           updateDashboard();
-           updateWorkersView();
-           updateBuildingsView();
-           updateArmyView();
-       }
-       
-       function renderProductivityDetails(resourceName) {
-           if (!gameState.productivity || !gameState.productivity[resourceName]) {
-               return '<p>Loading productivity data...</p>';
-           }
-           const p = gameState.productivity[resourceName];
-           return `<div class="mb-2">
-                       <strong>${resourceName}:</strong>
-                       <p class="mb-0 small">So far you have harvested ${resourceName.toLowerCase()} <strong>${p.actions}</strong> times. Your productivity bonus is <strong>${p.current_bonus_perc}%</strong>. When you reach a total of <strong>${p.actions_for_next_level}</strong> harvesting actions, your productivity bonus will increase to <strong>${p.next_level_bonus_perc}%</strong>.</p>
-                   </div>`;
-       }
+        function apiCall(data, callback) {
+            $.post(API_URL, data, function(response) {
+                if (response.auth_error) {
+                    showLoginScreen();
+                } else {
+                    callback(response);
+                }
+            }, 'json').fail(function(jqXHR) {
+                console.error("API Call Failed:", jqXHR.responseText);
+                showError("Error communicating with the server. Check console for details.");
+            });
+        }
 
+        function showError(message) {
+            $('#error-message').text(message).show();
+        }
 
-       function updateDashboard() {
-           if (!gameState || Object.keys(gameState).length === 0) return;
-           $('#earned-nano-balance').text(parseFloat(gameState.nano_earned_balance || 0).toFixed(8));
-           $('#unearned-nano-balance').text(parseFloat(gameState.nano_unearned_balance || 0).toFixed(8));
-           $('#wood-balance').text(parseFloat(gameState.wood || 0).toFixed(8));
-           $('#iron-balance').text(parseFloat(gameState.iron || 0).toFixed(8));
-           $('#stone-balance').text(parseFloat(gameState.stone || 0).toFixed(8));
-           $('#military-swords').text(Math.floor(gameState.sword || 0));
-           $('#soldiers-count').text(gameState.soldiers || 0);
-           
-           const powerBreakdown = gameState.military_power_breakdown || { total: 0, base: 0, bonus_perc: 0 };
-           $('#military-power').text(parseFloat(powerBreakdown.total).toFixed(8));
-           $('#military-power-breakdown').html(`Base: ${powerBreakdown.base} × ${1 + powerBreakdown.bonus_perc / 100} (Bonus: ${powerBreakdown.bonus_perc}%)`);
+        function clearAllTimers() {
+            activeTimers.forEach(timerId => clearInterval(timerId));
+            activeTimers = [];
+        }
 
-           $('#employees-count').text(gameState.workers || 0);
-           $('#next-worker-message').text(`Upgrade Dormitory to level ${gameState.next_worker_level} to gain an extra worker.`);
-           
-           // 24-Hour Harvest Activity
-           const activity = gameState.harvest_activity_24h;
-           let activityHtml = `
-               <li class="list-group-item d-flex justify-content-between align-items-center"><span>Your Harvest Actions</span> <strong>${activity.user_actions_24h}</strong></li>
-               <li class="list-group-item d-flex justify-content-between align-items-center"><span>All Users' Actions</span> <strong>${activity.all_actions_24h}</strong></li>
-               <li class="list-group-item d-flex justify-content-between align-items-center"><span>Your Reward Share</span> <strong>${activity.user_share_perc.toFixed(2)}%</strong></li>
-               <li class="list-group-item d-flex justify-content-between align-items-center"><span>Rewards Received</span> <strong>${parseFloat(activity.total_rewards_24h).toFixed(8)}</strong></li>
-           `;
-           $('#last-24h-activity-summary').html(activityHtml);
+        function formatDuration(totalSeconds) {
+            if (isNaN(totalSeconds) || totalSeconds < 0) return "00:00:00";
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+        }
 
+        function showView(viewId) {
+            clearAllTimers();
+            $('.view').removeClass('active-view');
+            $('#' + viewId).addClass('active-view');
 
-           let buildingSummaryHtml = '<ul class="list-group list-group-flush">';
-           for (const type in gameState.buildings) {
-               const level = gameState.buildings[type];
-               const cost = Math.pow(2, level);
-               const hasResources = (gameState.wood >= cost && gameState.iron >= cost && gameState.stone >= cost);
-               const buttonHtml = hasResources
-                   ? `<button class="btn btn-sm btn-primary upgrade-building-btn" data-building-type="${type}">Upgrade</button>`
-                   : `<small class="text-danger">Not enough resources to upgrade</small>`;
-
-               let bonusText = '';
-               let nextBonus = '';
-               if (type === 'Dormitory' && gameState.productivity['Wood']) {
-                   bonusText = `<div class="small text-muted">Current Prod. Bonus: +${gameState.productivity['Wood'].building_bonus_perc}%</div>`;
-                   nextBonus = `<div class="small text-info">Next Level Bonus: +${parseInt(gameState.productivity['Wood'].building_bonus_perc) + 1}%</div>`;
-               } else if (type === 'Barracks' && gameState.military_power_breakdown) {
-                   bonusText = `<div class="small text-muted">Current Army Bonus: +${gameState.military_power_breakdown.bonus_perc}%</div>`;
-                   nextBonus = `<div class="small text-info">Next Level Bonus: +${parseInt(gameState.military_power_breakdown.bonus_perc) + 1}%</div>`;
-               }
-
-               buildingSummaryHtml += `<li class="list-group-item">
-                                           <div class="d-flex justify-content-between align-items-center">
-                                               <span><strong>${type}</strong> - Lvl ${level}</span>
-                                               ${buttonHtml}
-                                           </div>
-                                           <div class="small text-muted">Cost to upgrade: ${cost} of each resource</div>
-                                           ${bonusText}
-                                           ${nextBonus}
-                                       </li>`;
-           }
-           buildingSummaryHtml += '</ul>';
-           $('#dashboard-buildings-summary').html(buildingSummaryHtml);
-
-           let productivityHtml = renderProductivityDetails('Wood') + renderProductivityDetails('Iron') + renderProductivityDetails('Stone');
-           $('#dashboard-productivity-stats').html(productivityHtml);
-
-           
-           $('#dashboard-worker-status').empty();
-           for (let i = 1; i <= gameState.workers; i++) {
-               const task = gameState.worker_tasks.find(t => t.worker_id == i);
-               let statusHtml = task ? `<div class="col-md-4 mb-2">Worker ${i}: ${task.task_type} - <span class="countdown-timer" data-completion="${task.completion_time}"></span></div>` : `<div class="col-md-4 mb-2">Worker ${i}: Idle</div>`;
-               $('#dashboard-worker-status').append(statusHtml);
-           }
-           startAllCountdownTimers();
-       }
-
-       function updateWorkersView() {
-           if (!$('#workers-view').hasClass('active-view') || !gameState.productivity) return;
-           $('#worker-list').empty();
-           
-           const productivityDetailsHtml = `
-               <div class='card mb-3'><div class='card-body'>
-                   ${renderProductivityDetails('Wood')}
-                   ${renderProductivityDetails('Iron')}
-                   ${renderProductivityDetails('Stone')}
-               </div></div>
-           `;
-
-           for (let i = 1; i <= gameState.workers; i++) {
-               const task = gameState.worker_tasks.find(t => t.worker_id == i);
-               let workerCard;
-               if (task) {
-                   workerCard = `<div class="col-md-4"><div class="card"><div class="card-header">Worker ${i} (Busy)</div><div class="card-body"><p><strong>Task:</strong> ${task.task_type}</p><p><strong>Time left:</strong> <span class="countdown-timer" data-completion="${task.completion_time}"></span></p></div></div></div>`;
-               } else {
-                   workerCard = `<div class="col-md-4"><div class="card"><div class="card-header">Worker ${i} (Free)</div><div class="card-body">
-                                   <p class="text-muted small mb-1">Time: ${formatDuration(gameState.task_duration_seconds)}</p>
-                                   <button class="btn btn-sm btn-outline-success w-100 mb-2 start-task-btn" data-worker-id="${i}" data-task-type="Harvest Wood">Harvest Wood</button>
-                                   <button class="btn btn-sm btn-outline-secondary w-100 mb-2 start-task-btn" data-worker-id="${i}" data-task-type="Harvest Iron">Harvest Iron</button>
-                                   <button class="btn btn-sm btn-outline-dark w-100 start-task-btn" data-worker-id="${i}" data-task-type="Harvest Stone">Harvest Stone</button>
-                                </div></div></div>`;
-               }
-               $('#worker-list').append(workerCard);
-           }
-           $('#worker-list').prepend(`<div class="col-12">${productivityDetailsHtml}</div>`);
-           startAllCountdownTimers();
-       }
-
-       function updateBuildingsView() {
-           if (!$('#buildings-view').hasClass('active-view') || !gameState.buildings) return;
-           $('#building-list').empty();
-           for (const type in gameState.buildings) {
-               const level = gameState.buildings[type];
-               const cost = Math.pow(2, level);
-               const nextLevel = parseInt(level) + 1;
-               const hasResources = ((parseFloat(gameState.wood) || 0) >= cost && (parseFloat(gameState.iron) || 0) >= cost && (parseFloat(gameState.stone) || 0) >= cost);
-               const buttonHtml = hasResources
-                   ? `<button class="btn btn-primary w-100 upgrade-building-btn" data-building-type="${type}">Upgrade to Level ${nextLevel}</button>`
-                   : `<p class="text-danger mb-0">Not enough resources to upgrade</p>`;
-               
-               let currentBonus = '';
-               let nextBonus = '';
-
-               if (type === 'Dormitory' && gameState.productivity['Wood']) {
-                   currentBonus = `Current Prod. Bonus: +${gameState.productivity['Wood'].building_bonus_perc}%`;
-                   nextBonus = `Next Level Bonus: +${parseInt(gameState.productivity['Wood'].building_bonus_perc) + 1}%`;
-               } else if (type === 'Barracks' && gameState.military_power_breakdown) {
-                   currentBonus = `Current Army Bonus: +${gameState.military_power_breakdown.bonus_perc}%`;
-                   nextBonus = `Next Level Bonus: +${parseInt(gameState.military_power_breakdown.bonus_perc) + 1}%`;
-               }
-
-               const buildingCard = `<div class="col-md-4"><div class="card"><div class="card-header">${type} - Level ${level}</div>
-                                     <div class="card-body">
-                                       <p class="card-text">${currentBonus}</p>
-                                       <p class="card-text"><small class="text-muted">${nextBonus}</small></p>
-                                       <hr>
-                                       <p>Upgrade cost: ${cost} Wood, ${cost} Iron, ${cost} Stone</p>
-                                       ${buttonHtml}
-                                     </div></div></div>`;
-               $('#building-list').append(buildingCard);
-           }
-       }
-
-       function updateArmyView() {
-           if (!$('#army-view').hasClass('active-view') || !gameState.wood) return;
-           $('#army-soldiers').text(gameState.soldiers || 0);
-           $('#army-swords').text(Math.floor(gameState.sword || 0));
-           const powerBreakdown = gameState.military_power_breakdown || { total: 0, base: 0, bonus_perc: 0 };
-           $('#army-power').text(parseFloat(powerBreakdown.total).toFixed(8));
-           $('#army-power-breakdown').html(`Base: ${powerBreakdown.base} × ${1 + powerBreakdown.bonus_perc / 100} (Bonus: ${powerBreakdown.bonus_perc}%)`);
-           
-           const cost = gameState.soldier_recruit_cost;
-           $('#recruit-cost-text').text(`Cost: ${cost.wood.toFixed(4)} Wood, ${cost.iron.toFixed(4)} Iron, ${cost.stone.toFixed(4)} Stone`);
-           const hasEnough = ((parseFloat(gameState.wood) || 0) >= cost.wood && (parseFloat(gameState.iron) || 0) >= cost.iron && (parseFloat(gameState.stone) || 0) >= cost.stone);
-           $('#recruit-cost-status').text(hasEnough ? '' : 'Not enough resources.');
-           $('#recruit-btn').prop('disabled', !hasEnough);
-       }
-       
-       function updateConquerView() {
-           apiCall({ action: 'get_conquer_data' }, function(response) {
-               if (response.success) {
-                   const data = response.data;
-                   $('#conquer-total-power').text(parseFloat(data.total_power).toFixed(8));
-                   $('#conquer-used-power').text(parseFloat(data.used_power).toFixed(8));
-                   $('#conquer-unused-power').text(parseFloat(data.unused_power).toFixed(8));
-
-                   const occupiedList = $('#occupied-list');
-                   occupiedList.empty();
-                   if (data.occupied_players.length === 0) {
-                       occupiedList.append('<tr><td colspan="3" class="text-center">You are not occupying any players.</td></tr>');
-                   } else {
-                       data.occupied_players.forEach(p => {
-                           occupiedList.append(`
-                               <tr>
-                                   <td>${p.username}</td>
-                                   <td>${parseFloat(p.army_power).toFixed(8)}</td>
-                                   <td><button class="btn btn-sm btn-warning liberate-btn" data-target-id="${p.id}">Liberate</button></td>
-                               </tr>
-                           `);
-                       });
-                   }
-
-                   const targetsList = $('#targets-list');
-                   targetsList.empty();
-                   if (data.potential_targets.length === 0) {
-                       targetsList.append('<tr><td colspan="3" class="text-center">No available targets.</td></tr>');
-                   } else {
-                       data.potential_targets.forEach(p => {
-                           let actionHtml = '';
-                           if (p.status === 'conquerable') {
-                               actionHtml = `<button class="btn btn-sm btn-danger conquer-btn" data-target-id="${p.id}">Conquer</button>`;
-                           } else if (p.status === 'protected') {
-                               actionHtml = `Protected for: <span class="protection-timer" data-protection-end="${p.protection_end_time}"></span>`;
-                           } else {
-                               actionHtml = `<span class="text-muted">${p.status}</span>`;
-                           }
-                           targetsList.append(`
-                               <tr>
-                                   <td>${p.username}</td>
-                                   <td>${parseFloat(p.army_power).toFixed(8)}</td>
-                                   <td>${actionHtml}</td>
-                               </tr>
-                           `);
-                       });
-                   }
-                   startAllCountdownTimers(); // To start protection timers
-               }
-           });
-       }
-       
-       function updateMarketView() {
-           const itemType = $('#market-item-select').val();
-           apiCall({ action: 'get_market_data', item_type: itemType }, function(response) {
-               if(response.success) {
-                   const { buys, sells } = response.data;
-                   $('#buy-orders').empty();
-                   buys.forEach(o => $('#buy-orders').append(`<tr><td>${parseFloat(o.price).toFixed(8)}</td><td>${o.quantity}</td></tr>`));
-                   $('#sell-orders').empty();
-                   sells.forEach(o => $('#sell-orders').append(`<tr><td>${parseFloat(o.price).toFixed(8)}</td><td>${o.quantity}</td></tr>`));
-               }
-           });
-       }
-
-       function updateJobsView() {
-           apiCall({ action: 'get_job_offers' }, function(response) {
-               if(response.success) {
-                   const jobList = $('#job-offers-list');
-                   jobList.empty();
-                   if (response.data.length === 0) {
-                       jobList.append('<tr><td colspan="6" class="text-center">No open jobs available.</td></tr>');
-                   } else {
-                       response.data.forEach(job => {
-                           jobList.append(`
-                               <tr>
-                                   <td>${job.employer_username}</td>
-                                   <td>${job.item_to_produce}</td>
-                                   <td>${job.quantity}</td>
-                                   <td>${parseFloat(job.salary).toFixed(8)}</td>
-                                   <td>${formatDuration(gameState.task_duration_seconds)}</td>
-                                   <td><button class="btn btn-sm btn-success accept-job-btn" data-job-id="${job.id}">Accept</button></td>
-                               </tr>
-                           `);
-                       });
-                   }
-               }
-           });
-           fetchAndUpdateGameState();
-       }
-       
-       function updateHistoryView() {
-           apiCall({ action: 'get_history' }, function(response) {
-               if(response.success) {
-                   $('#history-log').empty();
-                   response.data.forEach(log => {
-                       const logDate = new Date(log.timestamp.replace(' ', 'T'));
-                       $('#history-log').append(`<li class="list-group-item">[${logDate.toLocaleString()}] ${log.description}</li>`);
-                   });
-               }
-           });
-       }
-       
-       function updateTaxCollectionView() {
-            apiCall({ action: 'get_government_data' }, function(response) {
-               if(response.success) {
-                   const gov = response.data;
-                   let html = `
-                       <div class="col-6 col-md-4 mb-3"><strong>Nano Coin:</strong> ${parseFloat(gov.nano_earned_balance).toFixed(8)}</div>
-                       <div class="col-6 col-md-4 mb-3"><strong>Game Credits:</strong> ${parseFloat(gov.nano_unearned_balance).toFixed(8)}</div>
-                       <div class="col-6 col-md-4 mb-3"><strong>Wood:</strong> ${parseFloat(gov.wood).toFixed(8)}</div>
-                       <div class="col-6 col-md-4 mb-3"><strong>Iron:</strong> ${parseFloat(gov.iron).toFixed(8)}</div>
-                       <div class="col-6 col-md-4 mb-3"><strong>Stone:</strong> ${parseFloat(gov.stone).toFixed(8)}</div>
-                   `;
-                   $('#gov-balances-display').html(html);
-               }
-           });
-
-           apiCall({ action: 'get_tax_history' }, function(response) {
-               if(response.success) {
-                   const taxLog = $('#tax-history-log');
-                   taxLog.empty();
-                   if(response.data.length === 0) {
-                       taxLog.append('<tr><td colspan="3" class="text-center">No tax history found.</td></tr>');
-                   } else {
-                       response.data.forEach(log => {
-                           const logDate = new Date(log.timestamp.replace(' ', 'T'));
-                           taxLog.append(`
-                               <tr>
-                                   <td>${log.username}</td>
-                                   <td>${log.description}</td>
-                                   <td>${logDate.toLocaleString()}</td>
-                               </tr>
-                           `);
-                       });
-                   }
-               }
-           });
-       }
-       
-       function updateDistributionView() {
-           apiCall({ action: 'get_distribution_data' }, function(response) {
-               if (response.success) {
-                   $('#distribution-total').text(parseFloat(response.data.total_tax_24h || 0).toFixed(8));
-               }
-           });
-       }
-
-       function updateDistributionHistoryView() {
-           apiCall({ action: 'get_distribution_history' }, function(response) {
-               if (response.success) {
-                   const distLog = $('#distribution-history-log');
-                   distLog.empty();
-                    if(response.data.length === 0) {
-                       distLog.append('<tr><td colspan="4" class="text-center">No distribution history found.</td></tr>');
-                   } else {
-                       response.data.forEach(log => {
-                           const logDate = new Date(log.timestamp.replace(' ', 'T'));
-                           distLog.append(`
-                               <tr>
-                                   <td>${log.username}</td>
-                                   <td>${parseFloat(log.amount).toFixed(8)} ${log.asset_type}</td>
-                                   <td>${log.description}</td>
-                                   <td>${logDate.toLocaleString()}</td>
-                               </tr>
-                           `);
-                       });
-                   }
-               }
-           });
-       }
-
-       function updateHarvestingActivityView() {
-           const timeframe = $('#harvesting-timeframe-select').val();
-           apiCall({ action: 'get_harvesting_activity', timeframe: timeframe }, function(response) {
-               if(response.success) {
-                   const activityBody = $('#harvesting-activity-content');
-                   activityBody.empty();
-                   if(response.data.length === 0) {
-                       activityBody.append('<tr><td colspan="3" class="text-center">No activity found for this period.</td></tr>');
-                   } else {
-                       response.data.forEach(player => {
-                           activityBody.append(`
-                               <tr>
-                                   <td>${player.rank}</td>
-                                   <td>${player.username}</td>
-                                   <td>${player.action_count}</td>
-                               </tr>
-                           `);
-                       });
-                   }
-               }
-           });
-       }
-
-       function updateLeaderboardView() {
-           const sortBy = $('#leaderboard-sort-select').val();
-           const headerText = $('#leaderboard-sort-select option:selected').text();
-           
-           $('#leaderboard-score-header').text(headerText);
-
-           apiCall({ action: 'get_leaderboard', sort_by: sortBy }, function(response) {
-               if(response.success) {
-                   const leaderboardBody = $('#leaderboard-content');
-                   leaderboardBody.empty();
-                   if(response.data.length === 0) {
-                       leaderboardBody.append('<tr><td colspan="3" class="text-center">Leaderboard is empty.</td></tr>');
-                   } else {
-                       response.data.forEach(player => {
-                           let score = player.score;
-                           let formattedScore = (score % 1 === 0) ? parseInt(score) : parseFloat(score).toFixed(8);
-                           leaderboardBody.append(`
-                               <tr>
-                                   <td>${player.rank}</td>
-                                   <td>${player.username}</td>
-                                   <td>${formattedScore}</td>
-                               </tr>
-                           `);
-                       });
-                   }
-               }
-           });
-       }
-
-       function startAllCountdownTimers() {
-           $('.countdown-timer, .protection-timer').each(function() {
-               const element = $(this);
-               const completionTime = new Date(element.data('completion') || element.data('protection-end').replace(' ', 'T'));
-               
-               const timerId = setInterval(() => {
-                   const diff = completionTime - new Date();
-                   if (diff <= 0) {
-                       clearInterval(timerId);
-                       if(element.hasClass('countdown-timer')) {
-                           element.text("Completed!");
-                           apiCall({ action: 'complete_task' }, res => { if (res.success) fetchAndUpdateGameState(); });
-                       } else {
-                            // Refresh conquer view when a protection timer ends
-                           if ($('#conquer-view').hasClass('active-view')) {
-                               updateConquerView();
-                           }
-                       }
-                   } else {
-                       const totalSeconds = Math.floor(diff / 1000);
-                       const days = Math.floor(totalSeconds / 86400);
-                       const hours = Math.floor((totalSeconds % 86400) / 3600);
-                       const minutes = Math.floor((totalSeconds % 3600) / 60);
-                       const seconds = totalSeconds % 60;
-
-                       let timeString = '';
-                       if(days > 0) timeString += `${days}d `;
-                       timeString += `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
-                       element.text(timeString);
-                   }
-               }, 1000);
-               activeTimers.push(timerId);
-           });
-       }
-       
-       function checkLoginStatus() {
-            apiCall({ action: 'get_user_data' }, function(response) {
-               if (response.success) {
-                   $('#username-display').text(response.data.username);
-                   $('#auth-container').hide();
-                   $('#game-container').show();
-                   showView('home-view');
-               } else {
-                   showLoginScreen();
-               }
-           });
-       }
-
-       function logout() {
-           apiCall({ action: 'logout' }, function() {
-               showLoginScreen();
-           });
-       }
-
-       $('#login-btn').on('click', function() {
-           const username = $('#login-username').val();
-           const password = $('#login-password').val();
-           apiCall({ action: 'login', username: username, password: password }, function(response) {
-               if (response.success) {
-                   $('#error-message').hide();
-                   checkLoginStatus();
-               } else {
-                   showError(response.message);
-               }
-           });
-       });
-
-       $('#register-btn').on('click', function() {
-           apiCall({ action: 'register', username: $('#register-username').val(), password: $('#register-password').val(), email: $('#register-email').val() }, function(response) {
-                if (response.success) {
-                   alert(response.message);
-                   $('#show-login-link').click();
-               } else {
-                   showError(response.message);
-               }
-           });
-       });
-
-       $('#logout-btn').on('click', logout);
-       $('#show-register-link').on('click', function(e) { e.preventDefault(); $('#login-form, #error-message').hide(); $('#register-form').show(); });
-       $('#show-login-link').on('click', function(e) { e.preventDefault(); $('#register-form, #error-message').hide(); $('#login-form').show(); });
-
-       $('.nav-link').on('click', function(e) {
-           e.preventDefault();
-           showView($(this).data('view'));
-           $('.navbar-collapse').collapse('hide');
-       });
-
-       $(document).on('click', '.start-task-btn', function() {
-           apiCall({ action: 'start_task', worker_id: $(this).data('worker-id'), task_type: $(this).data('task-type') }, function(response) {
-               if (response.success) fetchAndUpdateGameState(); else alert(response.message);
-           });
-       });
-       
-       $(document).on('click', '.upgrade-building-btn', function() {
-           apiCall({ action: 'upgrade_building', building_type: $(this).data('building-type') }, function(response) {
-               if (response.success) fetchAndUpdateGameState(); else alert(response.message);
-           });
-       });
-
-       $('#market-item-select').on('change', updateMarketView);
-       
-       $('#leaderboard-sort-select').on('change', updateLeaderboardView);
-       
-       $('#harvesting-timeframe-select').on('change', updateHarvestingActivityView);
-
-       $('#place-order-btn').on('click', function() {
-           apiCall({ action: 'place_market_order', item_type: $('#market-item-select').val(), order_type: $('#order-type').val(), quantity: $('#order-quantity').val(), price: $('#order-price').val() }, function(response){
-               if (response.success) {
-                   $('#order-quantity, #order-price').val('');
-                   updateMarketView();
-                   fetchAndUpdateGameState();
-               } else {
-                   alert(response.message);
-               }
-           });
-       });
-
-       $('#job-quantity, #job-salary').on('input', function() {
-           const quantity = parseInt($('#job-quantity').val());
-           const salaryPerItem = parseFloat($('#job-salary').val());
-           
-           if (isNaN(quantity) || quantity <= 0 || isNaN(salaryPerItem) || salaryPerItem <= 0) {
-               $('#job-cost-summary').hide();
-               $('#post-job-btn').prop('disabled', true);
-               return;
-           }
-           
-           const ironCost = quantity;
-           const totalSalary = quantity * salaryPerItem;
-           
-           $('#job-resource-cost').text(ironCost);
-           $('#job-salary-cost').text(totalSalary.toFixed(8));
-           $('#job-cost-summary').show();
-
-           const hasEnoughIron = (parseFloat(gameState.iron) || 0) >= ironCost;
-           const totalCurrency = (parseFloat(gameState.nano_unearned_balance) || 0) + (parseFloat(gameState.nano_earned_balance) || 0);
-           const hasEnoughCurrency = totalCurrency >= totalSalary;
-
-           let statusText = [];
-           if (!hasEnoughIron) statusText.push('Not enough iron.');
-           if (!hasEnoughCurrency) statusText.push('Not enough currency.');
-           
-           $('#job-cost-status').text(statusText.join(' '));
-           $('#post-job-btn').prop('disabled', !hasEnoughIron || !hasEnoughCurrency);
-       });
-
-       $('#post-job-btn').on('click', function() {
-           const quantity = $('#job-quantity').val();
-           const salary = $('#job-salary').val();
-           apiCall({ action: 'post_job_offer', item: 'sword', quantity, salary }, function(response) {
-               if(response.success) {
-                   alert(response.message);
-                   $('#job-quantity, #job-salary').val('');
-                   $('#job-cost-summary').hide();
-                   updateJobsView();
-               } else {
-                   alert(response.message);
-               }
-           });
-       });
-
-       $(document).on('click', '.accept-job-btn', function() {
-           const jobId = $(this).data('job-id');
-           if (confirm('Are you sure you want to accept this job? One of your free workers will be assigned.')) {
-               apiCall({ action: 'accept_job', job_id: jobId }, function(response) {
-                   alert(response.message);
-                   if (response.success) {
-                       updateJobsView();
-                   }
-               });
-           }
-       });
-
-       $('#recruit-btn').on('click', function() {
-           apiCall({ action: 'recruit_soldiers' }, function(response) {
-               alert(response.message);
-               if (response.success) {
-                   fetchAndUpdateGameState();
-               }
-           });
-       });
-       
-       $(document).on('click', '.conquer-btn', function() {
-           const targetId = $(this).data('target-id');
-           if (confirm('Are you sure you want to conquer this player?')) {
-               apiCall({ action: 'conquer_player', target_id: targetId }, function(response) {
-                   alert(response.message);
-                   if (response.success) {
-                       updateConquerView();
-                   }
-               });
-           }
-       });
-
-       $(document).on('click', '.liberate-btn', function() {
-           const targetId = $(this).data('target-id');
-           if (confirm('Are you sure you want to liberate this player?')) {
-               apiCall({ action: 'liberate_player', target_id: targetId }, function(response) {
-                   alert(response.message);
-                   if (response.success) {
-                       updateConquerView();
-                   }
-               });
-           }
-       });
-
-       // Initialize popovers
-       var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-       var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-         return new bootstrap.Popover(popoverTriggerEl)
-       });
-
-       checkLoginStatus();
-   });
-   </script>
-</body>
-</html>
-
+            switch (viewId) {
+                case 'home-view':
+                case 'workers-view':
+                case 'buildings-view':
+                case 'army-view':
+                    fetchAndUpdateGameState();
+                    break;
+                case 'market-view':
+                    updateMarketView();
+                    break;
+                case 'history-view':
+                    updateHistoryView();
+                    break;
+                case 'jobs-view':
+                    updateJobsView();
+                    break;
+                case 'tax-collection-view':
+                    updateTaxCollectionView();
+                    break;
+                case 'distribution-view':
+                    updateDistributionView();
+                    break;
+                case 'distribution-history-view':
+                    updateDistributionHistoryView();
+                    break;
+                case 'leaderboard-view':
+                    updateLeaderboardView();
+                    break;
+                case
