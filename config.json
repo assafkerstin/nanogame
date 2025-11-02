@@ -1,6 +1,13 @@
 {
-  "dburl":"127.0.0.1"
-  "dbname": "game",
-  "dbuser": "nano"
-  "dbpwd":"Nano2000!"
+  "db_host": "127.0.0.1",
+  "db_name": "game",
+  "db_user": "nano",
+  "db_pass": "Nano2000!",
+  "constants": {
+    "GOVERNMENT_USER_ID": 1,
+    "GOVERNMENT_TAX_RATE": 0.25,
+    "REFERRAL_BONUS_RATE": 0.05,
+    "OCCUPATION_TAX_RATE": 0.10,
+    "TASK_DURATION_SECONDS": 3
+  }
 }
