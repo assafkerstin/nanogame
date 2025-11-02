@@ -1,5 +1,72 @@
 // Project: Nano Empire UI Rendering Functions
-// Contains all logic to update the DOM based on the current gameState.
+// Contains all logic to update the DOM based on the current gameState, including timers.
+
+let activeTimers = [];
+
+/**
+ * Clears all active countdown timers (tasks/protection).
+ */
+function clearAllTimers() {
+    activeTimers.forEach(timerId => clearInterval(timerId));
+    activeTimers = [];
+}
+
+/**
+ * Formats seconds into HH:MM:SS duration string.
+ * @param {number} totalSeconds 
+ * @returns {string}
+ */
+function formatDuration(totalSeconds) {
+    if (isNaN(totalSeconds) || totalSeconds < 0) return "00:00:00";
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+}
+
+/**
+ * Starts countdown timers for all tasks and protection periods currently displayed.
+ */
+function startAllCountdownTimers() {
+    clearAllTimers();
+    $('.countdown-timer, .protection-timer').each(function() {
+        const element = $(this);
+        const completionTime = new Date(element.data('completion') || element.data('protection-end').replace(' ', 'T'));
+        
+        const timerId = setInterval(function() {
+            const diff = completionTime - new Date();
+            if (diff <= 0) {
+                clearInterval(timerId);
+                if(element.hasClass('countdown-timer')) {
+                    element.text("Completed!");
+                    // Ensure apiCall is available (defined in main_logic.js)
+                    if (typeof apiCall === 'function') {
+                        apiCall({ action: 'complete_task' }, function(res) { 
+                            if (res.success) fetchAndUpdateGameState(); else showCustomAlert(res.message); 
+                        });
+                    }
+                } else {
+                    // Refresh conquer view when a protection timer ends
+                    if ($('#conquer-view').hasClass('active-view')) {
+                        updateConquerView();
+                    }
+                }
+            } else {
+                const totalSeconds = Math.floor(diff / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                let timeString = '';
+                if(days > 0) timeString += `${days}d `;
+                timeString += `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+                element.text(timeString);
+            }
+        }, 1000);
+        activeTimers.push(timerId);
+    });
+}
 
 /**
  * Main function to update all dynamic UI elements across the application.
