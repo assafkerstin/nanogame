@@ -37,7 +37,7 @@
                     <button id="login-btn" class="btn btn-primary w-100">Login</button>
                     <p class="text-center mt-3">No account? <a href="#" id="show-register-link">Register here</a></p>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div id="register-form" style="display: none;">
@@ -209,7 +209,7 @@
                             <hr>
                             <div id="military-power-breakdown" class="text-center small text-muted"></div>
                         </div>
-                    </div>
+                        </div>
                 </div>
                 <div class="col-md-5">
                     <div class="card">
@@ -455,9 +455,9 @@
                             </tr>
                         </thead>
                         <tbody id="distribution-history-log"></tbody>
-                    </table>
+                        </table>
                 </div>
-                </div>
+            </div>
         </div>
         
         <div id="harvesting-activity-view" class="view">
@@ -1110,9 +1110,9 @@
                         clearInterval(timerId);
                         if(element.hasClass('countdown-timer')) {
                             element.text("Completed!");
-                            apiCall({ action: 'complete_task' }, res => { if (res.success) fetchAndUpdateGameState(); else showCustomAlert(res.message); });
+                            apiCall({ action: 'complete_task' }, (res) => { if (res.success) fetchAndUpdateGameState(); else showCustomAlert(res.message); });
                         } else {
-                             // Refresh conquer view when a protection timer ends
+                            // Refresh conquer view when a protection timer ends
                             if ($('#conquer-view').hasClass('active-view')) {
                                 updateConquerView();
                             }
