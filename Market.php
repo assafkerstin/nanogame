@@ -114,24 +114,70 @@ class Market {
         while (true) {
             $this->pdo->beginTransaction();
             
-            // 1. Find the best Buy Order (Highest Bid, Oldest First)
-            $buy_order_stmt = $this->pdo->prepare("SELECT * FROM market_orders WHERE order_type = 'buy' AND item_type = ? ORDER BY price DESC, created_at ASC LIMIT 1 FOR UPDATE");
-            $buy_order_stmt->execute(array($item_type));
-            $buy_order = $buy_order_stmt->fetch();
+            try {
+                // 1. Find the best Buy Order (Highest Bid, Oldest First)
+                $buy_order_stmt = $this->pdo->prepare("SELECT * FROM market_orders WHERE order_type = 'buy' AND item_type = ? ORDER BY price DESC, created_at ASC LIMIT 1 FOR UPDATE");
+                $buy_order_stmt->execute(array($item_type));
+                $buy_order = $buy_order_stmt->fetch();
 
-            // 2. Find the best Sell Order (Lowest Ask, Oldest First)
-            $sell_order_stmt = $this->pdo->prepare("SELECT * FROM market_orders WHERE order_type = 'sell' AND item_type = ? ORDER BY price ASC, created_at ASC LIMIT 1 FOR UPDATE");
-            $sell_order_stmt->execute(array($item_type));
-            $sell_order = $sell_order_stmt->fetch();
+                // 2. Find the best Sell Order (Lowest Ask, Oldest First)
+                $sell_order_stmt = $this->pdo->prepare("SELECT * FROM market_orders WHERE order_type = 'sell' AND item_type = ? ORDER BY price ASC, created_at ASC LIMIT 1 FOR UPDATE");
+                $sell_order_stmt->execute(array($item_type));
+                $sell_order = $sell_order_stmt->fetch();
 
-            // Check if match is possible (A buy order exists, a sell order exists, and Bid >= Ask)
-            if (!$buy_order || !$sell_order || (float)$buy_order['price'] < (float)$sell_order['price']) {
+                // Check if match is possible (A buy order exists, a sell order exists, and Bid >= Ask)
+                if (!$buy_order || !$sell_order || (float)$buy_order['price'] < (float)$sell_order['price']) {
+                    $this->pdo->commit();
+                    break; // No more trades possible
+                }
+
+                // Match details
+                $trade_quantity = min($buy_order['quantity'], $sell_order['quantity']);
+                // Trade price is the price of the oldest, lowest sell order (the Ask price)
+                $trade_price = (float)$sell_order['price'];
+                $total_cost = (float)$trade_quantity * $trade_price;
+                
+                $buyer = $this->user->getUserRow($buy_order['user_id'], true); // Lock buyer
+                $seller = $this->user->getUserRow($sell_order['user_id']); 
+
+                if (!$buyer || !$seller) {
+                    // One user row vanished during the transaction window; abort this match.
+                    $this->pdo->commit();
+                    break;
+                }
+                
+                // Credit the buyer with the ITEM
+                $this->resourceManager->updateResource($buyer['id'], $item_type, $trade_quantity);
+                
+                // Credit the seller with the CURRENCY (and apply taxes)
+                $net_income = $this->resourceManager->applyTaxes($seller['id'], $total_cost, CURRENCY_EARNED, "market sale of $item_type");
+                $this->resourceManager->updateResource($seller['id'], CURRENCY_EARNED, $net_income);
+                $this->logger->logTransaction($seller['id'], 'market_sale', $net_income, "Sold $trade_quantity $item_type on market.");
+
+                // Update Remaining Order Quantities
+                if ((int)$buy_order['quantity'] == $trade_quantity) {
+                    $this->pdo->prepare("DELETE FROM market_orders WHERE id = ?")->execute(array($buy_order['id']));
+                } else {
+                    $this->pdo->prepare("UPDATE market_orders SET quantity = quantity - ? WHERE id = ?")->execute(array($trade_quantity, $buy_order['id']));
+                }
+
+                if ((int)$sell_order['quantity'] == $trade_quantity) {
+                    $this->pdo->prepare("DELETE FROM market_orders WHERE id = ?")->execute(array($sell_order['id']));
+                } else {
+                    $this->pdo->prepare("UPDATE market_orders SET quantity = quantity - ? WHERE id = ?")->execute(array($trade_quantity, $sell_order['id']));
+                }
+
+                $this->logger->logAction($buyer['id'], 'market_trade', "Bought $trade_quantity $item_type for " . number_format($total_cost, 8) . " currency from {$seller['username']}.");
+                $this->logger->logAction($seller['id'], 'market_trade', "Sold $trade_quantity $item_type for " . number_format($total_cost, 8) . " currency to {$buyer['username']}.");
+                
                 $this->pdo->commit();
-                break; // No more trades possible
+            } catch (Exception $e) {
+                // If any part of the try block failed, roll back the current transaction and stop matching.
+                $this->pdo->rollBack();
+                error_log("Market match failed: " . $e->getMessage());
+                break;
             }
-
-            // Match details
-            $trade_quantity = min($buy_order['quantity'], $sell_order['quantity']);
-            // Trade price is the price of the oldest, lowest sell order (the Ask price)
-            $trade_price = (float)$sell_order['price'];
-            $total_cost = (float)$
+        } // End while (true)
+    } // End matchMarketOrders function
+} // End Market class
+?>
