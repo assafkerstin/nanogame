@@ -37,7 +37,7 @@
                     <button id="login-btn" class="btn btn-primary w-100">Login</button>
                     <p class="text-center mt-3">No account? <a href="#" id="show-register-link">Register here</a></p>
                 </div>
-            </div>
+                </div>
         </div>
 
         <div id="register-form" style="display: none;">
@@ -119,15 +119,15 @@
                                 <div class="col-4 stat-card">
                                     <div class="value" id="soldiers-count">0</div>
                                     <div class="label">Soldiers</div>
-                              </div>
+                                </div>
                                 <div class="col-4 stat-card">
                                     <div class="value" id="military-swords">0</div>
                                     <div class="label">Swords</div>
-                              </div>
+                                </div>
                                 <div class="col-4 stat-card">
                                     <div class="value" id="military-power">0.00000000</div>
                                     <div class="label">Military Power</div>
-                              </div>
+                                </div>
                             </div>
                             <hr>
                             <div id="military-power-breakdown" class="text-center small text-muted"></div>
@@ -145,17 +145,17 @@
                                 <div class="col-6 stat-card">
                                     <div class="value" id="all-users-actions-24h">0</div>
                                     <div class="label">Server Actions</div>
-                              </div>
+                                </div>
                                 <div class="col-6 stat-card">
                                     <div class="value" id="user-share-24h">0%</div>
                                     <div class="label">Your Share</div>
-                              </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
- &nbsp;           <div class="row">
+             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">Productivity</div>
@@ -164,7 +164,7 @@
                     </div>
                 </div>
             </div>
- &nbsp;           <div class="row">
+             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">Worker Status</div>
@@ -196,15 +196,15 @@
                                 <div class="col-4 stat-card">
                                     <div class="value" id="soldiers-count">0</div>
                                     <div class="label">Soldiers</div>
-                              </div>
+                                </div>
                                 <div class="col-4 stat-card">
                                     <div class="value" id="military-swords">0</div>
                                     <div class="label">Swords</div>
-                              </div>
+                                </div>
                                 <div class="col-4 stat-card">
                                     <div class="value" id="military-power">0.00000000</div>
                                     <div class="label">Military Power</div>
-                              </div>
+                                </div>
                             </div>
                             <hr>
                             <div id="military-power-breakdown" class="text-center small text-muted"></div>
@@ -245,7 +245,7 @@
                             <div class="label">Unused Power</div>
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
 
             <div class="card">
@@ -341,7 +341,7 @@
                             <option value="stone">Stone</option>
                             <option value="sword">Sword</option>
                         </select>
-                </div>
+                    </div>
                 </div>
             </div>
 
@@ -451,12 +451,13 @@
                                 <th>Recipient</th>
                                 <th>Distribution</th>
                                 <th>Reason</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
                         <tbody id="distribution-history-log"></tbody>
                     </table>
                 </div>
-            </div>
+                </div>
         </div>
         
         <div id="harvesting-activity-view" class="view">
@@ -469,7 +470,7 @@
                             <option value="24_hours">Last 24 Hours</option>
                             <option value="all_time">All Time</option>
                         </select>
-                </div>
+                    </div>
                     <table class="table table-striped">
                         <thead>
                             <tr>
@@ -753,7 +754,7 @@
                                                 <span><strong>${type}</strong> - Lvl ${level}</span>
                                                 ${buttonHtml}
                                             </div>
-                                            <div class="small text-muted">Cost to upgrade: ${cost} Wood, ${cost} Iron, ${cost} Stone</div>
+                                            <div class="small text-muted">Cost to upgrade: ${cost} of each resource</div>
                                             ${bonusText}
                                             ${nextBonus}
                                         </li>`;
@@ -810,13 +811,13 @@
             $('#building-list').empty();
             for (const type in gameState.buildings) {
                 const level = gameState.buildings[type];
-                // Cost calculation matches the backend: two to the power of the building's current level
-                const cost = Math.pow(2, level); 
-                const hasResources = (parseFloat(gameState.wood) >= cost && parseFloat(gameState.iron) >= cost && parseFloat(gameState.stone) >= cost);
+                const cost = Math.pow(2, level);
+                const nextLevel = parseInt(level) + 1;
+                const hasResources = ((parseFloat(gameState.wood) || 0) >= cost && (parseFloat(gameState.iron) || 0) >= cost && (parseFloat(gameState.stone) || 0) >= cost);
                 const buttonHtml = hasResources 
                     ? `<button class="btn btn-primary w-100 upgrade-building-btn" data-building-type="${type}">Upgrade to Level ${nextLevel}</button>`
                     : `<p class="text-danger mb-0">Not enough resources to upgrade</p>`;
-
+                
                 let currentBonus = '';
                 let nextBonus = '';
 
@@ -828,7 +829,6 @@
                     nextBonus = `Next Level Bonus: +${parseInt(gameState.military_power_breakdown.bonus_perc) + 1}%`;
                 }
 
-                const nextLevel = parseInt(level) + 1;
                 const buildingCard = `<div class="col-md-4"><div class="card"><div class="card-header">${type} - Level ${level}</div>
                                       <div class="card-body">
                                         <p class="card-text">${currentBonus}</p>
@@ -855,7 +855,7 @@
             $('#recruit-cost-status').text(hasEnough ? '' : 'Not enough resources.');
             $('#recruit-btn').prop('disabled', !hasEnough);
         }
-
+        
         function updateConquerView() {
             apiCall({ action: 'get_conquer_data' }, function(response) {
                 if (response.success) {
@@ -1092,7 +1092,6 @@
                                     <td>${formattedScore}</td>
                                 </tr>
                             `);
-                        });
                     }
                 } else {
                     showError(response.message);
