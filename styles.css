@@ -1,0 +1,63 @@
+/* Project: Nano Empire Frontend Styles */
+
+body { 
+    background-color: #f0f2f5; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+}
+.view { 
+    display: none; 
+}
+.active-view { 
+    display: block; 
+}
+.navbar { 
+    background-color: #343a40; 
+}
+.navbar-brand, .nav-link { 
+    color: #fff !important; 
+}
+.card { 
+    margin-bottom: 1.5rem; 
+    box-shadow: 0 2px 4px rgba(0,0,0,.1); 
+}
+.card-header { 
+    background-color: #6c757d; 
+    color: white; 
+    font-weight: bold; 
+}
+.btn-primary { 
+    background-color: #007bff; 
+    border-color: #007bff; 
+}
+.resource-icon { 
+    width: 24px; 
+    height: 24px; 
+    margin-right: 8px; 
+    vertical-align: middle; 
+}
+.stat-card { 
+    text-align: center; 
+}
+.stat-card .value { 
+    font-size: 1.5rem; 
+    font-weight: bold; 
+}
+.stat-card .label { 
+    font-size: 0.9rem; 
+    color: #6c757d; 
+}
+.countdown-timer, .protection-timer { 
+    font-weight: bold; 
+    color: #dc3545; 
+}
+#auth-container, #game-container { 
+    max-width: 960px; 
+    margin: auto; 
+    padding: 20px; 
+}
+.order-book-table { 
+    font-size: 0.9em; 
+}
+.order-book-table td, .order-book-table th { 
+    padding: 0.4rem; 
+}
