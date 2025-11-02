@@ -36,12 +36,22 @@ try {
     exit;
 }
 
-// --- Global Variables & Game Constants ---
-define('GOVERNMENT_USER_ID', 1);
-define('GOVERNMENT_TAX_RATE', 0.25);
-define('REFERRAL_BONUS_RATE', 0.05);
-define('OCCUPATION_TAX_RATE', 0.10);
-define('TASK_DURATION_SECONDS', 3);
+// --- Global Variables & Game Constants (Dynamically Loaded) ---
+// Define constants from the configuration file, fixing the "Undefined constant" errors.
+if (isset($config['constants']) && is_array($config['constants'])) {
+    foreach ($config['constants'] as $name => $value) {
+        if (!defined($name)) {
+            define($name, $value);
+        }
+    }
+} else {
+    // Fallback to avoid fatal errors if 'constants' section is missing entirely
+    define('GOVERNMENT_USER_ID', 1);
+    define('GOVERNMENT_TAX_RATE', 0.25);
+    define('REFERRAL_BONUS_RATE', 0.05);
+    define('OCCUPATION_TAX_RATE', 0.10);
+    define('TASK_DURATION_SECONDS', 3);
+}
 
 // --- Main API Router ---
 $action = $_POST['action'] ?? '';
